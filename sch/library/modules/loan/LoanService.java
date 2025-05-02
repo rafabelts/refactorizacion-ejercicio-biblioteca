@@ -5,9 +5,10 @@ import java.util.List;
 import java.util.Scanner;
 import sch.library.modules.book.Book;
 import sch.library.modules.user.User;
+import sch.library.utils.LoanServiceInterface;
 import sch.library.utils.SearchItem;
 
-public class LoanService {
+public class LoanService implements LoanServiceInterface {
 
     Scanner scanner = new Scanner(System.in);
 
@@ -54,14 +55,49 @@ public class LoanService {
         System.out.println("Préstamo realizado con éxito.");
     }
 
+    public void showAll(List<Book> books, List<User> users, List<Loan> loans) {
+        System.out.println("--- PRÉSTAMOS ACTIVOS ---");
+        boolean areLoans = false;
+
+        for (Loan loan : loans) {
+            if (!loan.isReturned()) {
+                Book book = null;
+                User user = null;
+
+                book = new SearchItem<Book>().search(loan.getBookId(), books);
+                user = new SearchItem<User>().search(loan.getUserId(), users);
+
+                if (book != null && user != null) {
+                    System.out.println("ID Préstamo: " + loan.getId()
+                            + " | Libro: " + book.getTitle()
+                            + " | Usuario: " + user.getName()
+                            + " | Fecha: " + loan.getLoanDate());
+                    areLoans = true;
+                }
+            }
+        }
+
+        if (!areLoans) {
+            System.out.println("No hay préstamos activos.");
+        }
+
+    }
+
     public void returnBook(List<Book> books, List<Loan> loans) {
         System.out.println("--- DEVOLVER LIBRO ---");
 
         System.out.print("ID del libro: ");
         int bookId = scanner.nextInt();
-        scanner.nextLine();  // Consumir el salto de línea
+        scanner.nextLine(); // Consumir el salto de línea
 
-        Loan loan = new SearchItem<Loan>().search(bookId, loans);
+        Loan loan = null;
+
+        for (Loan l : loans) {
+            if (l.getBookId() == bookId && !l.isReturned()) {
+                loan = l;
+                break;
+            }
+        }
 
         if (loan == null) {
             System.out.println("Error: No hay préstamos activos para este libro.");
@@ -85,4 +121,5 @@ public class LoanService {
         }
         return userBooks;
     }
+
 }
